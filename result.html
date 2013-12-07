@@ -1,0 +1,16 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <title>Traveling Salesman solver</title>
+</head>
+<body>
+    {% if fitness is defined %}
+    <p>Minimum fitness found {{ fitness }}</p>
+    {% endif %}
+    <form action="/" method="post">
+    Enter the number of probes: <input type="text" name="numb"><br>
+  <input type="submit" value="Submit">
+</form>
+
+</body>
+</html>
