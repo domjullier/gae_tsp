@@ -2,11 +2,7 @@ __author__ = 'easyrider'
 
 import math
 
-def getEuc2D_distance(ix, iy, jx, jy):
-    xd = ix - jx
-    yd = iy - jy
+#TODO add mutation_worker, crossover_worker
 
-    dij = math.sqrt(xd*xd + yd*yd)
-
-    return dij
+#TODO how to "kill" worse problem instances?
 
