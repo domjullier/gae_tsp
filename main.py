@@ -5,14 +5,9 @@ import webapp2
 from google.appengine.api import taskqueue
 from google.appengine.ext import db
 import random
-import util
-
-
-class Result(db.Model):
-    """
-    Represents current best solution
-    """
-    fitness = db.FloatProperty(indexed=False)
+from util import fitness, txn
+from models import Result
+import json
 
 
 class ResultHandler(webapp2.RequestHandler):
@@ -26,10 +21,10 @@ class ResultHandler(webapp2.RequestHandler):
         """
         result = Result.get_by_key_name('best')
         if result is not None:
-            fitness = result.fitness
+            fit = result.fitness
         else:
-            fitness = None
-        template_values = {'fitness': fitness, 'locations': locations}
+            fit = None
+        template_values = {'fitness': fit, 'locations': locations}
         result_template = jinja_environment.get_template('result.html')
 
         self.response.out.write(result_template.render(template_values))
@@ -39,7 +34,7 @@ class ResultHandler(webapp2.RequestHandler):
         Init workers on a push queue.
         """
         number_of_tasks = int(self.request.get('numb'))
-
+        # @TODO purge a taskqueue when uploading new problem
         # Add given number of calculation taks to the queue
         for _ in range(0, number_of_tasks):
             taskqueue.add(url='/worker')
@@ -67,28 +62,18 @@ class ResultWorker(webapp2.RequestHandler):
         """
         path = self.generate_random_path()
 
-        def txn(fit):
-            result = Result.get_by_key_name('best')
-            if result is None:
-                result = Result(key_name='best', fitness=fit)
-            elif result.fitness > fit:
-                result.fitness = fit
-
-            result.put()
-
         #calculate fitness for our solution
-        fitness = util.fitness(path)
+        fit = fitness(path)
 
-        print 'fitness:'
-        print fitness
+        q = taskqueue.Queue('pull-queue')
+        tasks = []
 
-        # we should register on a pull queue to init mutation
-        # and crossover
-        # possibly, we should have mutation_worker(takes one from queue), crossover_worker(takes 2 from queue),
-        # fitness_worker(takes 1 from queue)
+        payload_str = json.dumps(path)
 
-        #TODO add instance to pull queue
-        db.run_in_transaction(txn, fitness)
+        tasks.append(taskqueue.Task(payload=payload_str, method='PULL'))
+        q.add(tasks)
+
+        #db.run_in_transaction(txn, fit)
 
 
 def int_elems(l):
@@ -121,7 +106,8 @@ def parse_instance(file_name):
 
 
 reset_db()
-# TODO Have a possibility of adding a custom new problem.
+# TODO Have a possibility of adding a custom new problem. File upload?
+# also only write to database in the end of computation or add to push queue
 locations = parse_instance("a280.tsp")
 
 jinja_environment = jinja2.Environment(

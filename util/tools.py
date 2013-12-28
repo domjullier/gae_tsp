@@ -1,4 +1,5 @@
 import math
+from models import Result
 
 
 def distance(ix, iy, jx, jy):
@@ -22,3 +23,12 @@ def fitness(path):
         last = city
 
     return dist
+
+
+def txn(fit):
+    result = Result.get_by_key_name('best')
+    if result is None:
+        result = Result(key_name='best', fitness=fit)
+    elif result.fitness > fit:
+        result.fitness = fit
+    result.put()
