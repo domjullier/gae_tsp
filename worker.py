@@ -2,8 +2,7 @@ from google.appengine.api import taskqueue
 from google.appengine.api import background_thread
 import json
 import random
-from util import fitness, txn, distance
-from google.appengine.ext import db
+from util import *
 
 
 def transpose(ind1, ind2):
@@ -67,7 +66,8 @@ def mutate():
             payload_str = json.dumps(new)
 
         newfit = fitness(new)
-        print "Mutation", fitness(new)
+        #print "Mutation", fitness(new)
+        save_to_cache(newfit)
         # we can't save it to the database
         #db.run_in_transaction(txn, newfit)
 
@@ -95,27 +95,26 @@ def cross():
         possible = [ind1, ind2, child1, child2]
         fits = [fitness(ind1), fitness(ind2), fitness(child1), fitness(child2)]
 
-        best = max(fits)
+        best = min(fits)
         ret1 = possible[fits.index(best)]
         possible.remove(ret1)
         fits.remove(best)
 
-        best = max(fits)
+        best = min(fits)
         ret2 = possible[fits.index(best)]
         possible.remove(ret2)
         fits.remove(best)
 
-        # we can't save it to the database
-        #newfit = fitness(ret1)
-        # we can't save it to the database
-        #db.run_in_transaction(txn, newfit)
+        newfit1 = fitness(ret1)
+        newfit2 = fitness(ret2)
 
-        #newfit = fitness(ret2)
-        # we can't save it to the database
-        #db.run_in_transaction(txn, newfit)
+        if newfit1 < newfit2:
+            save_to_cache(newfit1)
+        else:
+            save_to_cache(newfit2)
 
         newtasks = []
-        print "Crossover", fitness(ret1), fitness(ret2)
+        #print "Crossover", fitness(ret1), fitness(ret2)
 
         newtasks.append(taskqueue.Task(payload=json.dumps(ret1), method='PULL'))
         newtasks.append(taskqueue.Task(payload=json.dumps(ret2), method='PULL'))
@@ -125,7 +124,7 @@ def cross():
         queue.add(newtasks)
 
     elif len(tasks) == 1:
-        #return tasks
+        # if only one then we cannot crossover
         queue.delete_tasks(tasks)
         queue.add([taskqueue.Task(payload=tasks[0].payload, method='PULL')])
 
@@ -137,9 +136,6 @@ def f():
         else:
             cross()
 
-# starts the background thread that randomly mutates of crossovers
+# starts the background thread that randomly mutates or crossovers
 t = background_thread.BackgroundThread(target=f)
 t.start()
-
-
-

@@ -1,5 +1,36 @@
 import math
 from models import Result
+from google.appengine.api import memcache
+import logging
+from google.appengine.ext import db
+
+
+def reset_db():
+    query = Result.all(keys_only=True)
+    entries = query.fetch(1000)
+    db.delete(entries)
+
+
+def parse_instance(file_name):
+    """
+    Parsing the problem instance
+    """
+    with open(file_name) as src:
+        lines = src.readlines()
+
+        dim = int(lines[3].split(' ')[1])
+
+        #print dim
+        cities = []
+
+        for i in range(6, dim + 6):
+            current_line = lines[i].split()
+            cities.append([int(current_line[0]), int(current_line[1]), int(current_line[2])])
+
+        #print locations[0]
+        #print locations[279]
+
+        return cities
 
 
 def distance(ix, iy, jx, jy):
@@ -32,3 +63,25 @@ def txn(fit):
     elif result.fitness > fit:
         result.fitness = fit
     result.put()
+
+
+def save_to_cache(fit):
+    """
+    Adding value to memcache
+    """
+    best = memcache.get('best')
+    if best is not None:
+        if fit < best:
+            if not memcache.set('best', fit):
+                logging.error('Memcache set failed.')
+    else:
+        if not memcache.set('best', fit):
+            logging.error('Memcache set failed.')
+
+
+def get_from_cache():
+    return memcache.get('best')
+
+
+def reset_cache():
+    memcache.delete('best')
