@@ -6,12 +6,13 @@
 <body>
     <form><input type=button value="Refresh" onClick="history.go()"></form>
     {% if fitness is defined %}
-    <p>Minimum fitness found {{ fitness }}</p>
+    <p>Best fitness found {{ fitness }} in time {{ result_time }}</p>
     {% endif %}
     <form action="/" method="post">
     Enter number of one-time individuals: <input type="text" name="numb"><br>
-    Load new problem: <input type="text" name="problem"><br><br>
-    <input type="checkbox" name="reset" value="1">Reset<br>
+    Enter number of steps<input type="text" name="steps"><br>
+    New problem (leave blank to use default): <input type="text" name="problem"><br><br>
+    <input type="checkbox" name="reset" value="1">Reset app<br>
   <input type="submit" value="Submit">
 </form>
 

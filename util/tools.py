@@ -3,7 +3,7 @@ from models import Result
 from google.appengine.api import memcache
 import logging
 from google.appengine.ext import db
-import urllib2
+import urllib2, time
 
 
 def reset_db():
@@ -84,6 +84,16 @@ def save_to_cache(fit):
 
 def get_from_cache():
     return memcache.get('best')
+
+
+def get_and_update():
+    steps = memcache.get("steps")
+    if steps is not None and steps is not 0:
+        if not memcache.set("steps", steps-1):
+            logging.error('Memcache set failed.')
+        if not memcache.set("lasttime", time.time()):
+                logging.error('Memcache set failed.')
+    return steps
 
 
 def reset_cache():

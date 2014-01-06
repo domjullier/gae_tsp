@@ -58,7 +58,7 @@ def mutate():
 
     # we take one task
     tasks = queue.lease_tasks(3600, 1)
-
+    #print "Mutate", len(tasks)
     #print >>sys.stderr, len(tasks)
     #if any task was taken
     if len(tasks) > 0:
@@ -81,7 +81,7 @@ def mutate():
 
         newtasks.append(taskqueue.Task(payload=payload_str, method='PULL'))
         queue.delete_tasks(tasks)
-        #queue.add(newtasks)
+        queue.add(newtasks)
 
 
 def cross():
@@ -92,7 +92,7 @@ def cross():
 
     # we take one task
     tasks = queue.lease_tasks(3600, 2)
-
+    #print "Cross",len(tasks)
     if len(tasks) == 2:
         ind1 = json.loads(tasks[0].payload)
         ind2 = json.loads(tasks[1].payload)
@@ -129,7 +129,7 @@ def cross():
 
         queue.delete_tasks(tasks)
 
-        #queue.add(newtasks)
+        queue.add(newtasks)
 
     elif len(tasks) == 1:
         # if only one then we cannot crossover
@@ -139,10 +139,12 @@ def cross():
 
 def f():
     while True:
-        if random.random() > 0.5:
-            mutate()
-        else:
-            cross()
+        steps = get_and_update()
+        if steps is not None and steps > 0:
+            if random.random() > 0.5:
+                mutate()
+            else:
+                cross()
 
 
 # starts the background thread that randomly mutates or crossovers

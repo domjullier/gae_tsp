@@ -18,70 +18,49 @@ class ResultHandler(webapp2.RequestHandler):
         """
         Get the page with the current best results and a possibility to add individuals
         """
-        template_values = {'fitness': get_from_cache(), 'locations': locations}
+        starting = memcache.get('starttime')
+        lasting = memcache.get('lasttime')
+        current = 0
+        if starting is not None and lasting is not None:
+            current = lasting - starting
+        template_values = {'fitness': get_from_cache(), 'locations': locations, 'result_time': current}
         result_template = jinja_environment.get_template('result.html')
 
         self.response.out.write(result_template.render(template_values))
 
-    def rst(self):
-        print >>sys.stdout, "Reset.."
+    def reset(self):
         q = taskqueue.Queue('pull-queue')
-
-        #Hack to make sure, all entries in the queue are deleted in local mode
-        #tasks = q.lease_tasks(3600, 20, 1)
-        #q.delete_tasks(tasks)
-
-        """
-        for _ in range(20):
-            q.purge()
-
-        time.sleep(2)
-
-        for _ in range(20):
-            q.purge()
-        """
         q.purge()
-        time.sleep(5)
-
         reset_cache()
-
 
     def post(self):
         """
         Init workers on a push queue.
         """
 
-        reset = self.request.get('reset')
+        do_reset = self.request.get('reset')
         problem = self.request.get('problem')
+        steps = self.request.get('steps')
 
-        if reset == '1':
-            self.rst()
-            self.redirect('/')
-
-        elif problem != '':
-            self.rst()
-
-            global locations
-            global config
-
-            locations = parse_instance(problem)
-            config = {'locations': locations}
-
+        if do_reset == '1':
+            self.reset()
             self.redirect('/')
 
         else:
+            if problem != '':
+
+                global locations
+                global config
+
+                locations = parse_instance(problem)
+                config = {'locations': locations}
+
             number_of_tasks = int(self.request.get('numb'))
+            if not memcache.set("steps", int(steps)):
+                logging.error('Memcache set failed.')
 
-
-
-            #q = taskqueue.Queue('pull-queue')
-            #tasks = q.lease_tasks(3600, 1)
-
-            #q.delete_tasks(tasks)
-
-
-
-            # @TODO purge a taskqueue when uploading new problem
+            if not memcache.set("starttime", time.time()):
+                logging.error('Memcache set failed.')
 
             # Add given number of calculation taks to the queue
             for _ in range(0, number_of_tasks):
@@ -120,8 +99,6 @@ class ResultWorker(webapp2.RequestHandler):
 
         tasks.append(taskqueue.Task(payload=payload_str, method='PULL'))
         q.add(tasks)
-
-
         save_to_cache(fit)
 
     def get(self):
