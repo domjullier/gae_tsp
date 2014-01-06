@@ -31,10 +31,17 @@ class ResultHandler(webapp2.RequestHandler):
         #tasks = q.lease_tasks(3600, 20, 1)
         #q.delete_tasks(tasks)
 
-        #for _ in range(100):
-        #    q.purge()
+        """
+        for _ in range(20):
+            q.purge()
 
+        time.sleep(2)
+
+        for _ in range(20):
+            q.purge()
+        """
         q.purge()
+        time.sleep(5)
 
         reset_cache()
 

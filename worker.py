@@ -57,7 +57,7 @@ def mutate():
     queue = taskqueue.Queue('pull-queue')
 
     # we take one task
-    tasks = queue.lease_tasks(3600, 1, 30)
+    tasks = queue.lease_tasks(3600, 1)
 
     #print >>sys.stderr, len(tasks)
     #if any task was taken
@@ -81,7 +81,7 @@ def mutate():
 
         newtasks.append(taskqueue.Task(payload=payload_str, method='PULL'))
         queue.delete_tasks(tasks)
-        queue.add(newtasks)
+        #queue.add(newtasks)
 
 
 def cross():
@@ -91,7 +91,7 @@ def cross():
     queue = taskqueue.Queue('pull-queue')
 
     # we take one task
-    tasks = queue.lease_tasks(3600, 2, 30)
+    tasks = queue.lease_tasks(3600, 2)
 
     if len(tasks) == 2:
         ind1 = json.loads(tasks[0].payload)
@@ -129,7 +129,7 @@ def cross():
 
         queue.delete_tasks(tasks)
 
-        queue.add(newtasks)
+        #queue.add(newtasks)
 
     elif len(tasks) == 1:
         # if only one then we cannot crossover
