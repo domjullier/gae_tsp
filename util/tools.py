@@ -3,6 +3,7 @@ from models import Result
 from google.appengine.api import memcache
 import logging
 from google.appengine.ext import db
+import urllib2
 
 
 def reset_db():
@@ -15,22 +16,24 @@ def parse_instance(file_name):
     """
     Parsing the problem instance
     """
-    with open(file_name) as src:
-        lines = src.readlines()
 
-        dim = int(lines[3].split(' ')[1])
+    src = urllib2.urlopen(file_name)
 
-        #print dim
-        cities = []
+    lines = src.readlines()
 
-        for i in range(6, dim + 6):
-            current_line = lines[i].split()
-            cities.append([int(current_line[0]), int(current_line[1]), int(current_line[2])])
+    dim = int(lines[3].split(' ')[1])
 
-        #print locations[0]
-        #print locations[279]
+    #print dim
+    cities = []
 
-        return cities
+    for i in range(6, dim + 6):
+        current_line = lines[i].split()
+        cities.append([int(current_line[0]), int(current_line[1]), int(current_line[2])])
+
+    #print locations[0]
+    #print locations[279]
+
+    return cities
 
 
 def distance(ix, iy, jx, jy):

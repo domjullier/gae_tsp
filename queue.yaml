@@ -1,6 +1,6 @@
 total_storage_limit: 120M
 queue:
 - name: foo
-  rate: 1/s
+  rate: 10/s
 - name: pull-queue
   mode: pull

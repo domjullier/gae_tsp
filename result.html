@@ -4,11 +4,14 @@
     <title>Traveling Salesman solver</title>
 </head>
 <body>
+    <form><input type=button value="Refresh" onClick="history.go()"></form>
     {% if fitness is defined %}
     <p>Minimum fitness found {{ fitness }}</p>
     {% endif %}
     <form action="/" method="post">
-    Enter the number of probes: <input type="text" name="numb"><br>
+    Enter size of population: <input type="text" name="numb"><br>
+    Load new problem: <input type="text" name="problem"><br><br>
+    <input type="checkbox" name="reset" value="1">Reset<br>
   <input type="submit" value="Submit">
 </form>
 

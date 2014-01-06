@@ -3,6 +3,8 @@ from google.appengine.api import background_thread
 import json
 import random
 from util import *
+import sys
+import urllib2
 
 
 def transpose(ind1, ind2):
@@ -50,13 +52,19 @@ def mutate():
     """
     Function responsible for the mutation
     """
+
+
     queue = taskqueue.Queue('pull-queue')
 
     # we take one task
-    tasks = queue.lease_tasks(3600, 1)
+    tasks = queue.lease_tasks(3600, 1, 30)
 
+    #print >>sys.stderr, len(tasks)
     #if any task was taken
     if len(tasks) > 0:
+
+
+
         old = json.loads(tasks[0].payload)
         new = swap(old)
         newtasks = []
@@ -83,7 +91,7 @@ def cross():
     queue = taskqueue.Queue('pull-queue')
 
     # we take one task
-    tasks = queue.lease_tasks(3600, 2)
+    tasks = queue.lease_tasks(3600, 2, 30)
 
     if len(tasks) == 2:
         ind1 = json.loads(tasks[0].payload)
@@ -136,6 +144,8 @@ def f():
         else:
             cross()
 
+
 # starts the background thread that randomly mutates or crossovers
+
 t = background_thread.BackgroundThread(target=f)
 t.start()
